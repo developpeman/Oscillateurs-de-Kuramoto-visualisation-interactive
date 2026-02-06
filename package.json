@@ -1,0 +1,14 @@
+{
+  "name": "kuramoto-oscillators",
+  "version": "1.0.0",
+  "description": "Webapp interactive pour explorer la synchronisation des oscillateurs de Kuramoto",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
