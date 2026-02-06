@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oscillateurs de Kuramoto - TIPE</title>
+    <meta name="description"
+        content="Visualisation interactive de la synchronisation et bistabilité des oscillateurs de Kuramoto">
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header with Mode Selector -->
+        <header class="header">
+            <div class="header-top">
+                <h1>Oscillateurs de Kuramoto</h1>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="1">Synchro</button>
+                    <button class="mode-btn" data-mode="2">Bistabilité</button>
+                    <button class="mode-btn" data-mode="3">Hystérèse</button>
+                    <button class="mode-btn" data-mode="4">Statistique</button>
+                </div>
+            </div>
+            <div id="modeDescription" class="mode-description">
+                <strong>Mode 1 : Transition vers la synchronisation</strong> - J'augmente K progressivement pour
+                observer l'émergence de la synchronisation.
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Column: Visualizations -->
+            <section class="left-column">
+                <div class="viz-grid">
+                    <div class="viz-card">
+                        <h3>Vue Anneau (Réseau Spatial)</h3>
+                        <canvas id="ringCanvas" width="320" height="320"></canvas>
+                    </div>
+                    <div class="viz-card">
+                        <h3>Cercle des Phases (Torus)</h3>
+                        <canvas id="phaseCanvas" width="320" height="320"></canvas>
+                    </div>
+                    <div class="viz-card graph-card">
+                        <h3>Paramètre d'ordre r(t)</h3>
+                        <canvas id="rGraphCanvas" width="320" height="140"></canvas>
+                    </div>
+                    <div class="viz-card graph-card">
+                        <h3>Hystérèse r(K)</h3>
+                        <canvas id="hysteresisCanvas" width="320" height="140"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Controls -->
+            <aside class="right-column">
+                <!-- Simulation Controls - Always visible at top -->
+                <div class="panel sim-panel">
+                    <div class="sim-header">
+                        <div class="sim-buttons">
+                            <button id="playPauseBtn" class="btn btn-primary btn-large">▶ Play</button>
+                            <button id="stepBtn" class="btn btn-secondary">⏭ Pas</button>
+                            <button id="resetBtn" class="btn btn-tertiary">↺ Reset</button>
+                        </div>
+                        <div class="speed-control">
+                            <label>Vitesse</label>
+                            <input type="range" id="speedSlider" min="0.25" max="4" step="0.25" value="1">
+                            <span id="speedValue">×1.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Panel -->
+                <div class="panel stats-panel">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Couplage K</span>
+                            <span id="kValue" class="stat-value">1.00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Ordre r</span>
+                            <span id="rValue" class="stat-value">0.00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Nombre d'onde q</span>
+                            <span id="qValue" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Variance</span>
+                            <span id="varValue" class="stat-value">0.00</span>
+                        </div>
+                    </div>
+                    <div id="stateLabel" class="state-label">État : Initialisation</div>
+                </div>
+
+
+
+                <!-- K Coupling Control -->
+                <div class="panel">
+                    <h3>Couplage K</h3>
+                    <div class="slider-container">
+                        <input type="range" id="kSlider" min="0" max="5" step="0.05" value="1">
+                        <div class="slider-labels">
+                            <span>0</span><span>2.5</span><span>5</span>
+                        </div>
+                    </div>
+                    <div class="sweep-buttons">
+                        <button id="sweepUpBtn" class="btn btn-secondary">▲ K ↑</button>
+                        <button id="sweepDownBtn" class="btn btn-secondary">▼ K ↓</button>
+                        <button id="stopSweepBtn" class="btn btn-tertiary">■ Stop</button>
+                    </div>
+                </div>
+
+                <!-- Frequency & Phase Presets -->
+                <div class="panel">
+                    <h3>Fréquences ω<sub>i</sub></h3>
+                    <div class="preset-buttons">
+                        <button class="btn preset-btn active" data-freq="identical">Identiques</button>
+                        <button class="btn preset-btn" data-freq="random">Aléatoires</button>
+                        <button class="btn preset-btn" data-freq="twoGroups">2 groupes</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Phases initiales θ<sub>i</sub>(0)</h3>
+                    <div class="preset-buttons">
+                        <button class="btn init-btn" data-init="random">Aléatoire</button>
+                        <button class="btn init-btn" data-init="quasiSync">Quasi-sync</button>
+                        <button class="btn init-btn" data-init="twisted1">Twisted q=1</button>
+                        <button class="btn init-btn" data-init="twisted2">Twisted q=2</button>
+                    </div>
+                </div>
+
+                <!-- Perturbation -->
+                <div class="panel">
+                    <h3>Perturbation</h3>
+                    <div class="perturb-row">
+                        <input type="range" id="perturbSlider" min="0.01" max="1" step="0.01" value="0.1">
+                        <span id="perturbValue">0.10</span>
+                        <button id="perturbBtn" class="btn btn-accent">⚡</button>
+                    </div>
+                </div>
+
+                <!-- Statistical Experiment (Mode 4) -->
+                <div class="panel experiment-panel" id="experimentPanel" style="display: none;">
+                    <h3>Expérience Statistique</h3>
+                    <div class="experiment-config">
+                        <label>Simulations</label>
+                        <input type="number" id="numSimsInput" min="10" max="200" value="50">
+                        <button id="runExperimentBtn" class="btn btn-accent">🔬 Lancer</button>
+                    </div>
+                    <div id="experimentResults" class="experiment-results"></div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span class="footer-left">TIPE - Oscillateurs de Kuramoto</span>
+            <span class="footer-center">
+                <a href="https://www.aimsciences.org/article/doi/10.3934/nhm.2018014" target="_blank">Zhao (2018)</a>
+                <a href="https://www.sciencedirect.com/science/article/abs/pii/S1007570419301881" target="_blank">Dénes
+                    (2019)</a>
+                <a href="https://www.pik-potsdam.de/members/kurths/publikationen/2014/Ji_Kurths_2014_art_10.1140_epjst_e2014022130.pdf"
+                    target="_blank">Ji (2014)</a>
+                <a href="https://arxiv.org/html/2502.00884v1" target="_blank">Ameli (2025)</a>
+            </span>
+            <span class="footer-right">© 2026</span>
+        </footer>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
